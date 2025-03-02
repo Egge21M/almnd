@@ -1,5 +1,6 @@
 import { CashuMint, CashuWallet, MintQuoteResponse } from "@cashu/cashu-ts";
 import { Scheduler } from "./scheduler";
+import { isQuoteExpired } from "./utils";
 
 type PollingTypes = "mint" | "melt" | "proof";
 
@@ -18,11 +19,13 @@ export class MintCommunicator {
     this.options = opts;
   }
 
-  pollForMintQuotePaid(
+  pollForMintQuote(
     quoteId: string,
     callbacks: {
-      onUpdate: (s: MintQuoteResponse) => void;
-      onError: (e: Error) => void;
+      onPaid: (s: MintQuoteResponse) => void;
+      onIssued: (s: MintQuoteResponse) => void;
+      onError?: (e: Error) => void;
+      onExpired?: (s: MintQuoteResponse) => void;
     },
   ) {
     let attempts = 1;
@@ -31,7 +34,14 @@ export class MintCommunicator {
       try {
         const res = await this.wallet.checkMintQuote(quoteId);
         if (res.state === "PAID") {
-          callbacks.onUpdate(res);
+          callbacks.onPaid(res);
+        }
+        if (res.state === "ISSUED") {
+          callbacks.onIssued(res);
+          return;
+        }
+        if (isQuoteExpired(res)) {
+          callbacks.onExpired?.(res);
           return;
         }
         if (this.options?.backoffFunction) {
@@ -39,7 +49,7 @@ export class MintCommunicator {
         }
       } catch (e) {
         if (e instanceof Error) {
-          callbacks.onError(e);
+          callbacks.onError?.(e);
         }
       }
     }, timeout);
