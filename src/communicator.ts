@@ -1,6 +1,5 @@
 import { CashuMint, CashuWallet, MintQuoteResponse } from "@cashu/cashu-ts";
 import { Scheduler } from "./scheduler";
-import { TaskRemover } from "./type";
 
 type PollingTypes = "mint" | "melt" | "proof";
 

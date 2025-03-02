@@ -1,0 +1,1 @@
+export { MintCommunicator } from "./communicator";
