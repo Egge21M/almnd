@@ -1,4 +1,9 @@
-import { CashuMint, CashuWallet, MintQuoteResponse } from "@cashu/cashu-ts";
+import {
+  CashuMint,
+  CashuWallet,
+  MintQuoteResponse,
+  MintQuoteState,
+} from "@cashu/cashu-ts";
 import { Scheduler } from "./scheduler";
 import { isQuoteExpired } from "./utils";
 import { MintQuoteActions } from "./type";
@@ -24,19 +29,23 @@ export class MintCommunicator {
   pollForMintQuote(quoteId: string) {
     const emitter = new PollingEventEmitter<MintQuoteActions>();
     let attempts = 1;
+    let lastState: MintQuoteState | "EXPIRED" | null = null;
     const timeout = this.options?.initialPollingTimeout?.mint ?? 0;
     const [cancelTask, rescheduleTask] = this.scheduler.addTask(async () => {
       try {
         emitter.emit("polling", null);
         const res = await this.wallet.checkMintQuote(quoteId);
-        if (res.state === "PAID") {
+        if (res.state === "PAID" && lastState !== "PAID") {
+          lastState = MintQuoteState.PAID;
           emitter.emit("paid", res);
-        }
-        if (res.state === "ISSUED") {
+        } else if (res.state === "ISSUED") {
+          lastState = MintQuoteState.ISSUED;
           emitter.emit("issued", res);
-        }
-        if (isQuoteExpired(res)) {
+          return;
+        } else if (isQuoteExpired(res)) {
+          lastState = "EXPIRED";
           emitter.emit("expired", res);
+          return;
         }
         if (this.options?.backoffFunction) {
           rescheduleTask(this.options.backoffFunction(attempts));
