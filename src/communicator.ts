@@ -1,6 +1,8 @@
 import { CashuMint, CashuWallet, MintQuoteResponse } from "@cashu/cashu-ts";
 import { Scheduler } from "./scheduler";
 import { isQuoteExpired } from "./utils";
+import { MintQuoteActions } from "./type";
+import { PollingEventEmitter } from "./emitter";
 
 type PollingTypes = "mint" | "melt" | "proof";
 
@@ -19,42 +21,33 @@ export class MintCommunicator {
     this.options = opts;
   }
 
-  pollForMintQuote(
-    quoteId: string,
-    callbacks: {
-      onPaid: (s: MintQuoteResponse) => void;
-      onIssued: (s: MintQuoteResponse) => void;
-      onError?: (e: Error) => void;
-      onExpired?: (s: MintQuoteResponse) => void;
-    },
-  ) {
+  pollForMintQuote(quoteId: string) {
+    const emitter = new PollingEventEmitter<MintQuoteActions>();
     let attempts = 1;
     const timeout = this.options?.initialPollingTimeout?.mint ?? 0;
     const [cancelTask, rescheduleTask] = this.scheduler.addTask(async () => {
       try {
         const res = await this.wallet.checkMintQuote(quoteId);
         if (res.state === "PAID") {
-          callbacks.onPaid(res);
+          emitter.emit("paid", res);
         }
         if (res.state === "ISSUED") {
-          callbacks.onIssued(res);
-          return;
+          emitter.emit("issued", res);
         }
         if (isQuoteExpired(res)) {
-          callbacks.onExpired?.(res);
-          return;
+          emitter.emit("expired", res);
         }
         if (this.options?.backoffFunction) {
           rescheduleTask(this.options.backoffFunction(attempts));
         }
       } catch (e) {
         if (e instanceof Error) {
-          callbacks.onError?.(e);
+          emitter.emit("error", e);
         }
       }
     }, timeout);
 
-    return cancelTask;
+    return { on: emitter.on.bind(emitter), cancel: cancelTask };
   }
 
   async getMintQuote(amount: number) {
