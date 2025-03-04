@@ -6,6 +6,7 @@ export type TaskRemover = () => void;
 export type TaskRescheduler = (delay: number) => void;
 
 export type MintQuoteActions = {
+  polling: null;
   paid: MintQuoteResponse;
   issued: MintQuoteResponse;
   expired: MintQuoteResponse;

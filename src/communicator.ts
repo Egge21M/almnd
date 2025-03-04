@@ -27,6 +27,7 @@ export class MintCommunicator {
     const timeout = this.options?.initialPollingTimeout?.mint ?? 0;
     const [cancelTask, rescheduleTask] = this.scheduler.addTask(async () => {
       try {
+        emitter.emit("polling", null);
         const res = await this.wallet.checkMintQuote(quoteId);
         if (res.state === "PAID") {
           emitter.emit("paid", res);
