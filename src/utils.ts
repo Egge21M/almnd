@@ -5,5 +5,5 @@ export function getCurrentUnixTime() {
 }
 
 export function isQuoteExpired(res: MintQuoteResponse) {
-  return res.expiry < getCurrentUnixTime();
+  return res.expiry && res.expiry < getCurrentUnixTime();
 }
