@@ -14,3 +14,7 @@ export type MintQuoteActions = {
 };
 
 export type PollingEventHandler<T> = (payload: T) => void;
+
+export interface Logger {
+  log: (message: string) => void;
+}

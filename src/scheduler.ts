@@ -1,5 +1,5 @@
 import { QueueManager } from "./queue";
-import { TaskRemover, TaskRescheduler } from "./type";
+import { Logger, TaskRemover, TaskRescheduler } from "./type";
 
 export class Scheduler {
   private queue = new QueueManager();
@@ -8,22 +8,27 @@ export class Scheduler {
   private readonly refillInterval: number;
   private lastRefill: number = Date.now();
   private timer: ReturnType<typeof setTimeout> | null = null;
+  private logger?: Logger;
 
   constructor(options?: {
     throttleTimeout?: number;
     throttleCapacity?: number;
+    logger?: Logger;
   }) {
     this.refillInterval = options?.throttleTimeout ?? 3000;
     this.capacity = options?.throttleCapacity ?? 5;
+    this.logger = options?.logger;
   }
 
   public addPriorityTask(
     task: () => void | Promise<void>,
     delay?: number,
   ): [TaskRemover, TaskRescheduler] {
+    this.logger?.log("Adding priority task");
     let timer: number;
     let rm: TaskRemover;
     const reschedule = (delay: number) => {
+      this.logger?.log(`Scheduling priority task with ${delay}ms delay`);
       timer = setTimeout(() => {
         rm = this.queue.enqueuePriorityTask(task);
         this.schedule();
@@ -31,6 +36,7 @@ export class Scheduler {
     };
     reschedule(delay ?? 0);
     const remover = () => {
+      this.logger?.log("Removing priority task from queue");
       if (timer) {
         clearTimeout(timer);
       }
@@ -45,9 +51,11 @@ export class Scheduler {
     task: () => void | Promise<void>,
     delay?: number,
   ): [TaskRemover, TaskRescheduler] {
+    this.logger?.log("Adding task");
     let timer: number;
     let rm: TaskRemover;
     const reschedule = (delay: number) => {
+      this.logger?.log(`Scheduling task with ${delay}ms delay`);
       if (timer) {
         clearTimeout(timer);
       }
@@ -58,6 +66,7 @@ export class Scheduler {
     };
     reschedule(delay ?? 0);
     const remover = () => {
+      this.logger?.log("Removing priority task from queue");
       if (timer) {
         clearTimeout(timer);
       }
@@ -76,6 +85,7 @@ export class Scheduler {
 
   private processQueue(): void {
     this.refillTokens();
+    this.logger?.log(`Processing queue with ${this.tokens} left`);
     while (
       (this.queue.hasWaitingTask() || this.queue.hasWaitingPriorityTask()) &&
       this.tokens >= 1

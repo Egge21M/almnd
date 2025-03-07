@@ -7,7 +7,7 @@ import {
 } from "@cashu/cashu-ts";
 import { Scheduler } from "./scheduler";
 import { isQuoteExpired } from "./utils";
-import { MintQuoteActions } from "./type";
+import { Logger, MintQuoteActions } from "./type";
 import { PollingEventEmitter } from "./emitter";
 
 type PollingTypes = "mint" | "melt" | "proof";
@@ -17,14 +17,20 @@ type CommunicatorOptions = {
   initialPollingTimeout?: Record<PollingTypes, number>;
   throttleTimeout?: number;
   throttleCapacity?: number;
+  logger?: Logger;
 };
 
 export class MintCommunicator {
   private wallet: CashuWallet;
-  private scheduler: Scheduler = new Scheduler();
+  private scheduler: Scheduler;
   private options?: CommunicatorOptions;
 
   constructor(mintUrl: string, opts?: CommunicatorOptions) {
+    this.scheduler = new Scheduler({
+      throttleCapacity: this.options?.throttleCapacity,
+      throttleTimeout: this.options?.throttleTimeout,
+      logger: this.options?.logger,
+    });
     this.wallet = new CashuWallet(new CashuMint(mintUrl));
     this.options = opts;
   }
