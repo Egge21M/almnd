@@ -7,9 +7,9 @@
   "types": "dist/almnd.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/almnd.mjs",
-      "require": "./dist/almnd.umd.js",
-      "types": "./dist/almnd.d.ts"
+      "types": "./dist/almnd.d.ts",
+      "import": "./dist/almnd.js",
+      "require": "./dist/almnd.umd.cjs"
     }
   },
   "scripts": {
