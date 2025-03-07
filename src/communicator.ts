@@ -3,6 +3,7 @@ import {
   CashuWallet,
   MintQuoteResponse,
   MintQuoteState,
+  Proof,
 } from "@cashu/cashu-ts";
 import { Scheduler } from "./scheduler";
 import { isQuoteExpired } from "./utils";
@@ -68,6 +69,19 @@ export class MintCommunicator {
         try {
           const quoteRes = await this.wallet.createMintQuote(amount);
           res(quoteRes);
+        } catch (e) {
+          rej(e);
+        }
+      });
+    });
+    return promise;
+  }
+  async getProofs(amount: number, quote: MintQuoteResponse) {
+    const promise = new Promise<Proof[]>((res, rej) => {
+      this.scheduler.addPriorityTask(async () => {
+        try {
+          const proofs = await this.wallet.mintProofs(amount, quote.quote);
+          res(proofs);
         } catch (e) {
           rej(e);
         }
