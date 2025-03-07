@@ -51,6 +51,7 @@ export class MintCommunicator {
           return;
         }
         if (this.options?.backoffFunction) {
+          attempts++;
           rescheduleTask(this.options.backoffFunction(attempts));
         }
       } catch (e) {
