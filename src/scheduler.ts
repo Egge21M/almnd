@@ -3,11 +3,19 @@ import { TaskRemover, TaskRescheduler } from "./type";
 
 export class Scheduler {
   private queue = new QueueManager();
-  private readonly capacity: number = 20;
+  private readonly capacity: number;
   private tokens: number = 0;
-  private readonly refillInterval: number = 3000;
+  private readonly refillInterval: number;
   private lastRefill: number = Date.now();
   private timer: ReturnType<typeof setTimeout> | null = null;
+
+  constructor(options?: {
+    throttleTimeout?: number;
+    throttleCapacity?: number;
+  }) {
+    this.refillInterval = options?.throttleTimeout ?? 3000;
+    this.capacity = options?.throttleCapacity ?? 5;
+  }
 
   public addPriorityTask(
     task: () => void | Promise<void>,
@@ -72,7 +80,7 @@ export class Scheduler {
       (this.queue.hasWaitingTask() || this.queue.hasWaitingPriorityTask()) &&
       this.tokens >= 1
     ) {
-      const task = this.queue.dequeue(this.tokens >= 10);
+      const task = this.queue.dequeue(this.tokens >= 5);
       if (!task) {
         continue;
       }

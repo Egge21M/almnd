@@ -14,6 +14,8 @@ type PollingTypes = "mint" | "melt" | "proof";
 type CommunicatorOptions = {
   backoffFunction?: (numberOfTries: number) => number;
   initialPollingTimeout?: Record<PollingTypes, number>;
+  throttleTimeout?: number;
+  throttleCapacity?: number;
 };
 
 export class MintCommunicator {
