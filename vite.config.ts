@@ -7,6 +7,7 @@ export default defineConfig({
     rollupOptions: {
       external: ["@cashu/cashu-ts"],
     },
+    sourcemap: true,
     lib: {
       entry: "src/index.ts",
       name: "almnd",
