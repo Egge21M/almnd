@@ -51,6 +51,9 @@ export class LinkedQueue<T> {
   }
 
   remove(node: LinkedQueueNode<T>) {
+    if (!this.head) {
+      return;
+    }
     if (node === this.head) {
       this.head = node.next;
     } else if (node === this.tail) {
