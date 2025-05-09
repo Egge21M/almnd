@@ -26,21 +26,25 @@ export class MintCommunicator {
   private options?: CommunicatorOptions;
 
   constructor(mintUrl: string, opts?: CommunicatorOptions) {
+    this.options = opts;
     this.scheduler = new Scheduler({
       throttleCapacity: this.options?.throttleCapacity,
       throttleTimeout: this.options?.throttleTimeout,
       logger: this.options?.logger,
     });
     this.wallet = new CashuWallet(new CashuMint(mintUrl));
-    this.options = opts;
   }
 
   pollForMintQuote(quoteId: string) {
     const emitter = new PollingEventEmitter<MintQuoteActions>();
     let attempts = 1;
     let lastState: MintQuoteState | "EXPIRED" | null = null;
+    let active = true;
     const timeout = this.options?.initialPollingTimeout?.mint ?? 0;
-    const [cancelTask, rescheduleTask] = this.scheduler.addTask(async () => {
+    const [cancelOldTask, rescheduleTask] = this.scheduler.addTask(async () => {
+      if (!active) {
+        return;
+      }
       try {
         emitter.emit("polling", null);
         const res = await this.wallet.checkMintQuote(quoteId);
@@ -56,9 +60,12 @@ export class MintCommunicator {
           emitter.emit("expired", res);
           return;
         }
-        if (this.options?.backoffFunction) {
+        if (this.options?.backoffFunction && active) {
           attempts++;
-          rescheduleTask(this.options.backoffFunction(attempts));
+          const delay = this.options.backoffFunction(attempts);
+          setTimeout(() => {
+            rescheduleTask(delay);
+          }, 0);
         }
       } catch (e) {
         if (e instanceof Error) {
@@ -67,7 +74,14 @@ export class MintCommunicator {
       }
     }, timeout);
 
-    return { on: emitter.on.bind(emitter), cancel: cancelTask };
+    return {
+      on: emitter.on.bind(emitter),
+      cancel: () => {
+        cancelOldTask();
+        this.options?.logger?.log("Setting to false!");
+        active = false;
+      },
+    };
   }
 
   async getMintQuote(amount: number) {
