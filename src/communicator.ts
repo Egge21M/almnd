@@ -48,6 +48,7 @@ export class MintCommunicator {
       try {
         emitter.emit("polling", null);
         const res = await this.wallet.checkMintQuote(quoteId);
+        emitter.emit("response", res);
         if (res.state === "PAID" && lastState !== "PAID") {
           lastState = MintQuoteState.PAID;
           emitter.emit("paid", res);

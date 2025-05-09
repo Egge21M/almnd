@@ -7,6 +7,7 @@ export type TaskRescheduler = (delay: number) => void;
 
 export type MintQuoteActions = {
   polling: null;
+  response: MintQuoteResponse;
   paid: MintQuoteResponse;
   issued: MintQuoteResponse;
   expired: MintQuoteResponse;
