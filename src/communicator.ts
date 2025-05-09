@@ -35,11 +35,12 @@ export class MintCommunicator {
     this.wallet = new CashuWallet(new CashuMint(mintUrl));
   }
 
-  pollForMintQuote(quoteId: string) {
+  pollForMintQuote(quote: string | MintQuoteResponse) {
     const emitter = new PollingEventEmitter<MintQuoteActions>();
     let attempts = 1;
     let lastState: MintQuoteState | "EXPIRED" | null = null;
     let active = true;
+    let quoteId = typeof quote === "string" ? quote : quote.quote;
     const timeout = this.options?.initialPollingTimeout?.mint ?? 0;
     const [cancelOldTask, rescheduleTask] = this.scheduler.addTask(async () => {
       if (!active) {
@@ -56,7 +57,7 @@ export class MintCommunicator {
           lastState = MintQuoteState.ISSUED;
           emitter.emit("issued", res);
           return;
-        } else if (isQuoteExpired(res)) {
+        } else if (isQuoteExpired(typeof quote === "string" ? res : quote)) {
           lastState = "EXPIRED";
           emitter.emit("expired", res);
           return;
