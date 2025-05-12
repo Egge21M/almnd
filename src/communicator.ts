@@ -1,6 +1,7 @@
 import {
   CashuMint,
   CashuWallet,
+  LockedMintQuoteResponse,
   MintQuoteResponse,
   MintQuoteState,
   Proof,
@@ -91,6 +92,23 @@ export class MintCommunicator {
       this.scheduler.addPriorityTask(async () => {
         try {
           const quoteRes = await this.wallet.createMintQuote(amount);
+          res(quoteRes);
+        } catch (e) {
+          rej(e);
+        }
+      });
+    });
+    return promise;
+  }
+
+  async getLockedMintQuote(amount: number, pubkey: string) {
+    const promise = new Promise<LockedMintQuoteResponse>((res, rej) => {
+      this.scheduler.addPriorityTask(async () => {
+        try {
+          const quoteRes = await this.wallet.createLockedMintQuote(
+            amount,
+            pubkey,
+          );
           res(quoteRes);
         } catch (e) {
           rej(e);
