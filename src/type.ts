@@ -1,4 +1,4 @@
-import { MintQuoteResponse } from "@cashu/cashu-ts";
+import { PartialMintQuoteResponse } from "@cashu/cashu-ts";
 
 export type Task = () => void | Promise<void>;
 
@@ -7,10 +7,10 @@ export type TaskRescheduler = (delay: number) => void;
 
 export type MintQuoteActions = {
   polling: null;
-  response: MintQuoteResponse;
-  paid: MintQuoteResponse;
-  issued: MintQuoteResponse;
-  expired: MintQuoteResponse;
+  response: PartialMintQuoteResponse;
+  paid: PartialMintQuoteResponse;
+  issued: PartialMintQuoteResponse;
+  expired: PartialMintQuoteResponse;
   error: Error;
 };
 

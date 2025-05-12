@@ -23,7 +23,7 @@
   "author": "Egge",
   "license": "MIT",
   "dependencies": {
-    "@cashu/cashu-ts": "^2.2.0"
+    "@cashu/cashu-ts": "^2.5.2"
   },
   "devDependencies": {
     "vite": "^6.1.0",

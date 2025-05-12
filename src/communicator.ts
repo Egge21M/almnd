@@ -99,6 +99,7 @@ export class MintCommunicator {
     });
     return promise;
   }
+
   async getProofs(amount: number, quote: MintQuoteResponse) {
     const promise = new Promise<Proof[]>((res, rej) => {
       this.scheduler.addPriorityTask(async () => {
