@@ -5,6 +5,7 @@ import {
   MintQuoteResponse,
   MintQuoteState,
   Proof,
+  Token,
 } from "@cashu/cashu-ts";
 import { Scheduler } from "./scheduler";
 import { isQuoteExpired } from "./utils";
@@ -130,5 +131,18 @@ export class MintCommunicator {
       });
     });
     return promise;
+  }
+
+  async receive(token: Token) {
+    return new Promise<Proof[]>((res, rej) => {
+      this.scheduler.addPriorityTask(async () => {
+        try {
+          const proofs = await this.wallet.receive(token);
+          res(proofs);
+        } catch (e) {
+          rej(e);
+        }
+      });
+    });
   }
 }
